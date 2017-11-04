@@ -1,4 +1,5 @@
 const argon2 = require('argon2');
+const jwt = require('jsonwebtoken');
 
 const User = require('../models').User;
 
@@ -14,9 +15,11 @@ module.exports = {
 
       const user = await User.create({ email, password: safePassword });
 
-      res.send(JSON.stringify({ success: true, user }))      
+      const token = jwt.sign({ user }, 'abc123');
+
+      res.json({ success: true, user, token });
     } catch (e) {
-      res.send(JSON.stringify({ success: false, error: e.message }));
+      res.json({ success: false, error: e.message });
     }
   },
 
@@ -29,9 +32,11 @@ module.exports = {
 
       await checkPasswordMatches(safePassword, password);
 
-      res.send(JSON.stringify({ success: true, user }));
+      const token = jwt.sign({ user }, 'abc123');
+
+      res.json({ success: true, user, token });
     } catch (e) {
-      res.send(JSON.stringify({ success: false, error: e.message }));
+      res.json({ success: false, error: e.message });
     }
   },
 
