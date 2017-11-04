@@ -1,3 +1,5 @@
+const argon2 = require('argon2');
+
 const User = require('../models').User;
 
 module.exports = {
@@ -8,11 +10,13 @@ module.exports = {
       validateNewUser(email, emailAgain, password, passwordAgain);
       await checkUserDoesntAlreadyExist(email);
 
-      const user = await User.create({ email, password });
-      
-      res.status(200).send(user);
+      const safePassword = await argon2.hash(password);
+
+      const user = await User.create({ email, password: safePassword });
+
+      res.send(JSON.stringify({ success: true, user }))      
     } catch (e) {
-      res.status(400).send(e);
+      res.send(JSON.stringify({ success: false, error: e.message }));
     }
   },
 
@@ -21,8 +25,8 @@ module.exports = {
       const users = await User.all();
       
       res.status(200).send(users);
-    } catch (e) {      
-      res.status(400).send(e);
+    } catch (e) {
+      res.status(400).send(e.message);
     }
   },
 }
