@@ -27,7 +27,7 @@ module.exports = {
       const user = await getExistingUser(email);
       const { password: safePassword } = user;
 
-      checkPasswordMatches(safePassword, password);
+      await checkPasswordMatches(safePassword, password);
 
       res.send(JSON.stringify({ success: true, user }));
     } catch (e) {
