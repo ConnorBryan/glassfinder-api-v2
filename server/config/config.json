@@ -1,0 +1,26 @@
+{
+  "development": {
+    "username": "glassfinder",
+    "password": "1Qazmlp01!",
+    "database": "glassfinder",
+    "host": "104.236.12.41",
+    "port": 5432,
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "glassfinder",
+    "password": "1Qazmlp01!",
+    "database": "glassfinder",
+    "host": "104.236.12.41",
+    "port": 5432,
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "glassfinder",
+    "password": "1Qazmlp01!",
+    "database": "glassfinder",
+    "host": "104.236.12.41",
+    "port": 5432,
+    "dialect": "postgres"
+  }
+}
