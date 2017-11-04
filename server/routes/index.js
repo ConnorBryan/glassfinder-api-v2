@@ -5,6 +5,7 @@ module.exports = app => {
     message: 'Glassfinder API v1.0.7',
   }));
 
+  app.post('/api/user', usersController.get);
   app.get('/api/users', usersController.list);
   app.post('/api/users', usersController.create);
 };
