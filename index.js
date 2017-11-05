@@ -6,10 +6,11 @@ const jwt = require('jsonwebtoken');
 const app = express();
 
 const NON_AUTHENTICATED_ROUTES = {
-  ['/api/users']: true,
+  ['/api/user']: true,
 };
 
-pluralizeObjectKeys(NON_AUTHENTICATED_ROUTES);
+addPluralsToObjectKeys(NON_AUTHENTICATED_ROUTES);
+addSlashesToObjectKeys(NON_AUTHENTICATED_ROUTES);
 
 /*
   M i d d l e w a r e
@@ -64,6 +65,10 @@ module.exports = app;
 
 /* = = = */
 
-function pluralizeObjectKeys(object) {
+function addPluralsToObjectKeys(object) {
   Object.keys(object).forEach(key => (object[`${key}s`] = true));
+}
+
+function addSlashesToObjectKeys(object) {
+  Object.keys(object).forEach(key => (object[`${key}/`] = true));
 }
