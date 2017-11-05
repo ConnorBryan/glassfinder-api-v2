@@ -51,16 +51,24 @@ module.exports = {
     const { verificationCode, userId } = req.query;
 
     try {
-      if (!verificationCode) res.json({ success: false, error: `Invalid verification code` });
+      if (!userId) {
+        return res.json({ success: false, error: `Invalid verification user ID` });
+      }
 
-      if (!userId) res.json({ success: false, error: `Invalid verification user ID` });
-
+      if (!verificationCode) {
+        res.json({ success: false, error: `Invalid verification code` });
+      }
+      
       const user = await User.findById(userId);
       const { verified, verificationCode: actualVerificationCode } = user;
   
-      if (verified) res.json({ success: false, error: `User #${userId} has already been verified` });
+      if (verified) {
+        return res.json({ success: false, error: `User #${userId} has already been verified` });
+      }
      
-      if (verificationCode !== actualVerificationCode) res.json({ success: false, error: `Invalid verification code for user #${userId}` });
+      if (verificationCode !== actualVerificationCode) {
+        return res.json({ success: false, error: `Invalid verification code for user #${userId}` });
+      }
 
       user.verified = true;
       user.verificationCode = null;
@@ -143,7 +151,7 @@ async function sendVerificationEmail(email, userId, verificationCode) {
       `,
       html: `
         <h2>Welcome to Glassfinder</h2>
-        <a href="http://localhost:6166/api/users/verify?userId=${userId}&verificationCode=${verificationCode}">Click here to verify your account.</a>
+        <a href="http://localhost:3000/user-verification?userId=${userId}&verificationCode=${verificationCode}">Click here to verify your account.</a>
       `,
     };
 
