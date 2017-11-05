@@ -1,4 +1,5 @@
 const argon2 = require('argon2');
+const uuid = require('uuid/v4');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models').User;
@@ -13,7 +14,11 @@ module.exports = {
 
       const safePassword = await argon2.hash(password);
 
-      const user = await User.create({ email, password: safePassword });
+      const user = await User.create({
+        email,
+        password: safePassword,
+        verificationCode: uuid(),
+      });
 
       const token = jwt.sign({ user }, 'abc123');
 
@@ -35,6 +40,32 @@ module.exports = {
       const token = jwt.sign({ user }, 'abc123');
 
       res.json({ success: true, user, token });
+    } catch (e) {
+      res.json({ success: false, error: e.message });
+    }
+  },
+
+  verify: async (req, res) => {
+    const { code, userId } = req.query;
+
+    try {
+      if (!code) res.json({ success: false, error: `Invalid verification code` });
+
+      if (!userId) res.json({ success: false, error: `Invalid verification user ID` });
+
+      const user = await User.findById(userId);
+      const { verified, verificationCode } = user;
+  
+      if (verified) res.json({ success: false, error: `User #${userId} has already been verified` });
+     
+      if (code !== verificationCode) res.json({ success: false, error: `Invalid verification code for user #${userId}` });
+
+      user.verified = true;
+      user.verificationCode = null
+
+      await user.save();
+
+      res.json({ success: true, user });
     } catch (e) {
       res.json({ success: false, error: e.message });
     }

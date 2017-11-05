@@ -11,7 +11,8 @@
     "morgan": "^1.9.0",
     "pg": "^7.4.0",
     "pg-hstore": "^2.3.2",
-    "sequelize": "^4.22.4"
+    "sequelize": "^4.22.4",
+    "uuid": "^3.1.0"
   },
   "scripts": {
     "start:dev": "nodemon ./bin/www.js"
