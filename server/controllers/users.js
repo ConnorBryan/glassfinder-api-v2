@@ -1,6 +1,7 @@
 const argon2 = require('argon2');
 const uuid = require('uuid/v4');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 
 const User = require('../models').User;
 
@@ -13,16 +14,17 @@ module.exports = {
       await checkUserDoesntAlreadyExist(email);
 
       const safePassword = await argon2.hash(password);
+      const verificationCode = uuid();
 
-      const user = await User.create({
+      const { id } = await User.create({
         email,
         password: safePassword,
-        verificationCode: uuid(),
+        verificationCode,
       });
 
-      const token = jwt.sign({ user }, 'abc123');
+      sendVerificationEmail(email, id, verificationCode);
 
-      res.json({ success: true, user, token });
+      res.json({ success: true });
     } catch (e) {
       res.json({ success: false, error: e.message });
     }
@@ -46,26 +48,28 @@ module.exports = {
   },
 
   verify: async (req, res) => {
-    const { code, userId } = req.query;
+    const { verificationCode, userId } = req.query;
 
     try {
-      if (!code) res.json({ success: false, error: `Invalid verification code` });
+      if (!verificationCode) res.json({ success: false, error: `Invalid verification code` });
 
       if (!userId) res.json({ success: false, error: `Invalid verification user ID` });
 
       const user = await User.findById(userId);
-      const { verified, verificationCode } = user;
+      const { verified, verificationCode: actualVerificationCode } = user;
   
       if (verified) res.json({ success: false, error: `User #${userId} has already been verified` });
      
-      if (code !== verificationCode) res.json({ success: false, error: `Invalid verification code for user #${userId}` });
+      if (verificationCode !== actualVerificationCode) res.json({ success: false, error: `Invalid verification code for user #${userId}` });
 
       user.verified = true;
-      user.verificationCode = null
+      user.verificationCode = null;
 
       await user.save();
 
-      res.json({ success: true, user });
+      const token = jwt.sign({ user }, 'abc123');
+
+      res.json({ success: true, user, token });
     } catch (e) {
       res.json({ success: false, error: e.message });
     }
@@ -115,4 +119,41 @@ async function checkPasswordMatches(dbPassword, receivedPassword) {
 
 function compareStrings(stringA, stringB) {
   return stringA === stringB;
+}
+
+async function sendVerificationEmail(email, userId, verificationCode) {
+  try {
+    const { user, pass } = await new Promise((resolve, reject) => (
+      nodemailer.createTestAccount((err, account) => err ? reject(err) : resolve(account))
+    ));
+
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: { user, pass },
+    });
+
+    const mailOptions = {
+      from: `Glassfinder Account Verification <do_not_reply@glassfinder.com>`,
+      to: email,
+      subject: 'Verify your Glassfinder account',
+      text: `Welcome to Glassfinder! Copy/paste the following link to verify your account: 
+        http://localhost:6166/api/users/verify?userId=${userId}&verificationCode=${verificationCode}
+      `,
+      html: `
+        <h2>Welcome to Glassfinder</h2>
+        <a href="http://localhost:6166/api/users/verify?userId=${userId}&verificationCode=${verificationCode}">Click here to verify your account.</a>
+      `,
+    };
+
+    const info = await new Promise((resolve, reject) => (
+      transporter.sendMail(mailOptions, (err, info) => err ? reject(err) : resolve(info))
+    ));
+
+    console.info('Sent mail!', info.messageId);
+    console.info('Preview URL @ ', nodemailer.getTestMessageUrl(info));
+  } catch (e) {
+    console.error(e);
+  }
 }

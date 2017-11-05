@@ -8,5 +8,5 @@ module.exports = app => {
   app.post('/api/user', usersController.get);
   app.get('/api/users', usersController.list);
   app.post('/api/users', usersController.create);
-  app.post('/api/users/verify', usersController.verify);
+  app.get('/api/users/verify', usersController.verify);
 };
