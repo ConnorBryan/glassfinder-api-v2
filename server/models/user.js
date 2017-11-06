@@ -17,14 +17,12 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       defaultValue: null,
     },
+    linked: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    type: DataTypes.STRING,
   });
-
-  User.associate = models => {
-    User.hasMany(models.Piece, {
-      foreignKey: 'pieceId',
-      as: 'pieces',
-    });
-  };
 
   return User;
 };

@@ -3,7 +3,7 @@ const uuid = require('uuid/v4');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 
-const User = require('../models').User;
+const { User, Artist } = require('../models');
 
 module.exports = {
   create: async (req, res) => {
@@ -45,6 +45,48 @@ module.exports = {
       return res.json({ success: false, error: e.message });
     }
   },
+  link: async (req, res) => {
+    const { user, type } = req.body;
+
+    try {
+      if (!user) {
+        return res.json({ success: false, error: `User is required for the linking process` });
+      } 
+
+      if (!type) {
+        return res.json({ success: false, error: `A type must be specified for the linking process` });
+      }
+
+      const { id } = JSON.parse(user);
+      const dbUser = await User.findById(id);
+
+      if (dbUser.linked) {
+        return res.json({ success: false, error: `User with ID #${id} has already been linked` });
+      }
+
+      dbUser.linked = true;
+      dbUser.type = type;
+
+      switch (type) {
+        case 'artist':
+          const artist = await Artist.create({
+            name: '',
+            tagline: '',
+            image: '',
+            from: '',
+            description: '',
+            userId: id,
+          });
+
+          await dbUser.save();
+
+          return res.json({ success: true, artist });
+        default: throw Error(`Unstable type ${type} cannot be linked`);
+      }
+    } catch (e) {
+      return res.json({ success: false, error: e.message });
+    }
+  },
   verify: async (req, res) => {
     const { verificationCode, userId } = req.query;
 
@@ -75,18 +117,18 @@ module.exports = {
 
       const token = jwt.sign({ user }, 'abc123');
 
-      res.json({ success: true, user, token });
+      return res.json({ success: true, user, token });
     } catch (e) {
-      res.json({ success: false, error: e.message });
+      return res.json({ success: false, error: e.message });
     }
   },
   list: async (req, res) => {
     try {
       const users = await User.all();
       
-      res.status(200).send(users);
+      return res.status(200).send(users);
     } catch (e) {
-      res.status(400).send(e.message);
+      return res.status(400).send(e.message);
     }
   },
   changePassword: async (req, res) => {
@@ -112,7 +154,7 @@ module.exports = {
 
       return res.json({ success: true, message: `User #${id}'s password was updated` });   
     } catch (e) {
-      res.json({ success: true, message: e.message });
+      return res.json({ success: true, message: e.message });
     }
   },
 }
