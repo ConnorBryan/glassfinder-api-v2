@@ -6,10 +6,10 @@ const nodemailer = require('nodemailer');
 const { User, Artist } = require('../models');
 
 module.exports = {
-  create: async (req, res) => {
-    const { email, emailAgain, password, passwordAgain } = req.body;
-
-    try {
+  create: (req, res) => {
+    processify(req, res, async () => {
+      const { email, emailAgain, password, passwordAgain } = req.body;
+      
       validateNewUser(email, emailAgain, password, passwordAgain);
       await checkUserDoesntAlreadyExist(email);
 
@@ -24,15 +24,13 @@ module.exports = {
 
       sendVerificationEmail(email, id, verificationCode);
 
-      res.json({ success: true });
-    } catch (e) {
-      res.json({ success: false, error: e.message });
-    }
+      success(res);
+    });
   },
   get: async (req, res) => {
-    const { email, password } = req.body;
+    processify(req, res, async () => {
+      const { email, password } = req.body;
 
-    try {
       const user = await getExistingUser(email);
       const { password: safePassword } = user;
 
@@ -40,28 +38,45 @@ module.exports = {
 
       const token = jwt.sign({ user }, 'abc123');
 
-      return res.json({ success: true, user, token });
-    } catch (e) {
-      return res.json({ success: false, error: e.message });
-    }
+      return success(res, { user, token });
+    });
+  },
+  sync: async (req, res) => {
+    processify(req, res, async () => {
+      const { email } = req.body;
+
+      if (!email) {
+       return error(res, `An email is required to sync an account with the database`);
+      }
+
+      await User.sync();
+
+      const user = await User.findOne({ where: { email } });
+
+      if (!user) {
+        return error(res, `Unable to sync with invalid email ${email}`);
+      }
+
+      return success(res, { user });
+    });
   },
   link: async (req, res) => {
-    const { user, type } = req.body;
+    processify(req, res, async () => {
+      const { user, type } = req.body;
 
-    try {
       if (!user) {
-        return res.json({ success: false, error: `User is required for the linking process` });
+        return error(res, `User is required for the linking process`);
       } 
 
       if (!type) {
-        return res.json({ success: false, error: `A type must be specified for the linking process` });
+        return error(res, `A type must be specified for the linking process`);
       }
 
       const { id } = JSON.parse(user);
       const dbUser = await User.findById(id);
 
       if (dbUser.linked) {
-        return res.json({ success: false, error: `User with ID #${id} has already been linked` });
+        return error(res, `User with ID #${id} has already been linked`);
       }
 
       dbUser.linked = true;
@@ -80,34 +95,32 @@ module.exports = {
 
           await dbUser.save();
 
-          return res.json({ success: true, artist });
+          return success(res, { artist });
         default: throw Error(`Unstable type ${type} cannot be linked`);
       }
-    } catch (e) {
-      return res.json({ success: false, error: e.message });
-    }
+    });
   },
-  verify: async (req, res) => {
-    const { verificationCode, userId } = req.query;
-
-    try {
+  verify: (req, res) => {
+    processify(req, res, async () => {
+      const { verificationCode, userId } = req.query;
+      
       if (!userId) {
-        return res.json({ success: false, error: `Invalid verification user ID` });
+        return error(`Invalid verification user ID`);
       }
 
       if (!verificationCode) {
-        res.json({ success: false, error: `Invalid verification code` });
+        return error(`Invalid verification code`);
       }
       
       const user = await User.findById(userId);
       const { verified, verificationCode: actualVerificationCode } = user;
   
       if (verified) {
-        return res.json({ success: false, error: `User #${userId} has already been verified` });
+        return error(`User #${userId} has already been verified`);
       }
      
       if (verificationCode !== actualVerificationCode) {
-        return res.json({ success: false, error: `Invalid verification code for user #${userId}` });
+        return error(`Invalid verification code for user #${userId}`);
       }
 
       user.verified = true;
@@ -117,33 +130,29 @@ module.exports = {
 
       const token = jwt.sign({ user }, 'abc123');
 
-      return res.json({ success: true, user, token });
-    } catch (e) {
-      return res.json({ success: false, error: e.message });
-    }
+      return success(res, { user, token });
+    });
   },
   list: async (req, res) => {
-    try {
+    processify(req, res, async () => {
       const users = await User.all();
       
       return res.status(200).send(users);
-    } catch (e) {
-      return res.status(400).send(e.message);
-    }
+    });
   },
   changePassword: async (req, res) => {
-    const { user, password } = req.body;
+    processify(req, res, async () => {
+      const { user, password } = req.body;
 
-    try {
       if (!user || !password) {
-        return res.json({ success: false, error: `Invalid user or password provided` });
+        return error(res, `Invalid user or password provided`);
       }
 
       const { id } = user;
       const dbUser = await User.findById(id);
 
       if (!dbUser) {
-        return res.json({ success: false, error: `Unable to change password for invalid user ID #${id}` });
+        return error(res, `Unable to change password for invalid user ID #${id}`);
       }
 
       const safePassword = await argon2.hash(password);
@@ -152,14 +161,28 @@ module.exports = {
 
       await dbUser.save();
 
-      return res.json({ success: true, message: `User #${id}'s password was updated` });   
-    } catch (e) {
-      return res.json({ success: true, message: e.message });
-    }
+      return success(res);
+    });
   },
 }
 
 /* = = = */
+
+function processify(req, res, process) {
+  try {
+    process();
+  } catch (e) {
+    return error(res, e.message);
+  }
+}
+
+function success(res, data) {
+  return res.json(Object.assign({ success: true }, data));
+}
+
+function error(res, message) {
+  return res.json({ success: false, message });
+}
 
 async function getExistingUser(email) {
   const user = await User.findOne({ where: { email } });
