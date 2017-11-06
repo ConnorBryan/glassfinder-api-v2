@@ -45,6 +45,8 @@ module.exports = {
     processify(req, res, async () => {
       const { email } = req.body;
 
+      let linkedAccount;
+
       if (!email) {
        return error(res, `An email is required to sync an account with the database`);
       }
@@ -57,7 +59,19 @@ module.exports = {
         return error(res, `Unable to sync with invalid email ${email}`);
       }
 
-      return success(res, { user });
+      if (user.linked) {
+        const { id: userId, type } = user;
+
+        if (type === 'artist') {
+          linkedAccount = await Artist.findOne({ where: { userId } });
+
+          if (!linkedAccount) {
+            return error(res, `User #${id} is a linked account, but no linked account was found`);
+          }
+        }
+      }
+
+      return success(res, { user, linkedAccount });
     });
   },
   link: async (req, res) => {
@@ -85,7 +99,7 @@ module.exports = {
       switch (type) {
         case 'artist':
           const artist = await Artist.create({
-            name: '',
+            name: 'Bob Dole',
             tagline: '',
             image: '',
             from: '',
@@ -252,4 +266,8 @@ async function sendVerificationEmail(email, userId, verificationCode) {
   } catch (e) {
     console.error(e);
   }
+}
+
+function capitalize(string) {
+  return string.split('').map((l, i) => i === 0 ? l.toUpperCase() : l).join('');
 }
