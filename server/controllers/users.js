@@ -29,7 +29,6 @@ module.exports = {
       res.json({ success: false, error: e.message });
     }
   },
-
   get: async (req, res) => {
     const { email, password } = req.body;
 
@@ -46,7 +45,6 @@ module.exports = {
       res.json({ success: false, error: e.message });
     }
   },
-
   verify: async (req, res) => {
     const { verificationCode, userId } = req.query;
 
@@ -82,7 +80,6 @@ module.exports = {
       res.json({ success: false, error: e.message });
     }
   },
-
   list: async (req, res) => {
     try {
       const users = await User.all();
@@ -91,6 +88,28 @@ module.exports = {
     } catch (e) {
       res.status(400).send(e.message);
     }
+  },
+  changePassword: async (req, res) => {
+    const { user, password } = req.body;
+
+    if (!user || !password) {
+      return res.json({ success: false, error: `Invalid user or password provided` });
+    }
+
+    const { id } = user;
+    const dbUser = await User.findById(id);
+
+    if (!dbUser) {
+      return res.json({ success: false, error: `Unable to change password for invalid user ID #${id}` });
+    }
+
+    const safePassword = await argon2.hash(password);
+
+    dbUser.password = safePassword;
+
+    await dbUser.save();
+
+    res.json({ success: true, message: `User #${id}'s password was updated` });    
   },
 }
 

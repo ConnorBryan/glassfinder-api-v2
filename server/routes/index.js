@@ -9,4 +9,5 @@ module.exports = app => {
   app.get('/api/users', usersController.list);
   app.post('/api/users', usersController.create);
   app.post('/api/users/verify', usersController.verify);
+  app.post('/api/change-password', usersController.changePassword);
 };
