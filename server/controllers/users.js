@@ -40,9 +40,9 @@ module.exports = {
 
       const token = jwt.sign({ user }, 'abc123');
 
-      res.json({ success: true, user, token });
+      return res.json({ success: true, user, token });
     } catch (e) {
-      res.json({ success: false, error: e.message });
+      return res.json({ success: false, error: e.message });
     }
   },
   verify: async (req, res) => {
@@ -92,24 +92,28 @@ module.exports = {
   changePassword: async (req, res) => {
     const { user, password } = req.body;
 
-    if (!user || !password) {
-      return res.json({ success: false, error: `Invalid user or password provided` });
+    try {
+      if (!user || !password) {
+        return res.json({ success: false, error: `Invalid user or password provided` });
+      }
+
+      const { id } = user;
+      const dbUser = await User.findById(id);
+
+      if (!dbUser) {
+        return res.json({ success: false, error: `Unable to change password for invalid user ID #${id}` });
+      }
+
+      const safePassword = await argon2.hash(password);
+
+      dbUser.password = safePassword;
+
+      await dbUser.save();
+
+      return res.json({ success: true, message: `User #${id}'s password was updated` });   
+    } catch (e) {
+      res.json({ success: true, message: e.message });
     }
-
-    const { id } = user;
-    const dbUser = await User.findById(id);
-
-    if (!dbUser) {
-      return res.json({ success: false, error: `Unable to change password for invalid user ID #${id}` });
-    }
-
-    const safePassword = await argon2.hash(password);
-
-    dbUser.password = safePassword;
-
-    await dbUser.save();
-
-    res.json({ success: true, message: `User #${id}'s password was updated` });    
   },
 }
 
