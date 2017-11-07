@@ -18,13 +18,28 @@ module.exports = (sequelize, DataTypes) => {
     });
   };
 
-  Artist.prototype.getEditable = function () {
+  Artist.prototype.getSafeFields = function () {
     return {
-      name: this.name,
-      tagline: this.tagline,
-      image: this.image,
-      from: this.from,
-      description: this.description,
+      name: {
+        value: this.name,
+        editable: true,
+      },
+      tagline: {
+        value: this.tagline,
+        editable: true,
+      },
+      image: {
+        value: this.image,
+        editable: true,
+      },
+      from: {
+        value: this.from,
+        editable: true,
+      },
+      description: {
+        value: this.description,
+        editable: true,
+      },
     };
   };
 

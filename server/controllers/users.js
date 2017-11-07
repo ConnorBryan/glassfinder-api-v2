@@ -38,7 +38,7 @@ module.exports = {
 
       const token = jwt.sign({ user }, 'abc123');
 
-      return success(res, { user, token });
+      return success(res, { user: user.getSafeFields(), token });
     });
   },
   sync: (req, res) => {
@@ -54,7 +54,7 @@ module.exports = {
       await User.sync();
 
       const user = await User.findOne({ where: { email } });
-
+      
       if (!user) {
         return error(res, `Unable to sync with invalid email ${email}`);
       }
@@ -71,7 +71,10 @@ module.exports = {
         }
       }
 
-      return success(res, { user, linkedAccount: linkedAccount.getEditable() });
+      return success(res, {
+        user: user.getSafeFields(),
+        linkedAccount: linkedAccount ? linkedAccount.getSafeFields() : null,
+      });
     });
   },
   link: (req, res) => {
@@ -86,11 +89,15 @@ module.exports = {
         return error(res, `A type must be specified for the linking process`);
       }
 
-      const { id } = JSON.parse(user);
-      const dbUser = await User.findById(id);
+      const { email } = JSON.parse(user);
+      const dbUser = await User.findOne({ where: { email } });
+
+      if (!dbUser) {
+        return error(res, `There is no user with email ${email}`);
+      }
 
       if (dbUser.linked) {
-        return error(res, `User with ID #${id} has already been linked`);
+        return error(res, `User with email ${email} has already been linked`);
       }
 
       dbUser.linked = true;
@@ -104,12 +111,12 @@ module.exports = {
             image: '',
             from: '',
             description: '',
-            userId: id,
+            userId: dbUser.id,
           });
 
           await dbUser.save();
 
-          return success(res, { artist });
+          return success(res, { artist: artist.getSafeFields() });
         default: throw Error(`Unstable type ${type} cannot be linked`);
       }
     });
@@ -144,7 +151,7 @@ module.exports = {
 
       const token = jwt.sign({ user }, 'abc123');
 
-      return success(res, { user, token });
+      return success(res, { user: user.getSafeFields(), token });
     });
   },
   list: (req, res) => {
@@ -186,7 +193,6 @@ module.exports = {
         newFieldValue,
         linked,
       } = req.body;
-
       const user = JSON.parse(stringUser);
 
       if (!user) {
@@ -205,15 +211,15 @@ module.exports = {
         return error(res, `A linked request was made on a user that has not been linked`);
       }
 
-      const { id } = user;
+      const { email } = user;
 
-      if (!id) {
-        return error(res, `Whatever that user was, it didn't have a valid id`);
+      if (!email) {
+        return error(res, `Whatever that user was, it didn't have a valid email`);
       }
       
       await User.sync();
 
-      const dbUser = await User.findById(id);
+      const dbUser = await User.findOne({ where: { email } });
 
       if (!dbUser) {
         return error(res, `No matching user was found in the database`);        
@@ -234,7 +240,7 @@ module.exports = {
 
             await artist.save();
 
-            return success(res, { artist });
+            return success(res, { artist: artist.getSafeFields() });
           default: throw Error(`Unstable type provided in updateField`);
         }
       } else {
@@ -242,7 +248,7 @@ module.exports = {
 
         await dbUser.save();
 
-        return success(res, { user: dbUser });
+        return success(res, { user: dbUser.getSafeFields() });
       }
     });
   },
@@ -258,25 +264,12 @@ async function processify(req, res, process) {
   }
 }
 
-function success(res, data) {
-  return res.json(Object.assign({ success: true }, data));
-}
-
-function error(res, message) {
-  return res.json({ success: false, message });
-}
-
 async function getExistingUser(email) {
   const user = await User.findOne({ where: { email } });
 
   if (!user) throw Error(`No user found with email ${email}`)  ;
 
   return user;
-}
-
-function validateNewUser(email, emailAgain, password, passwordAgain) {
-  if (!compareStrings(email, emailAgain)) throw Error(`Email fields do not match`);
-  if (!compareStrings(password, passwordAgain)) throw Error(`Password fields do not match`);
 }
 
 async function checkUserDoesntAlreadyExist(email) {
@@ -293,10 +286,6 @@ async function checkPasswordMatches(dbPassword, receivedPassword) {
   if (!match) throw Error(`Password is incorrect`);
 
   return true;
-}
-
-function compareStrings(stringA, stringB) {
-  return stringA === stringB;
 }
 
 async function sendVerificationEmail(email, userId, verificationCode) {
@@ -334,6 +323,23 @@ async function sendVerificationEmail(email, userId, verificationCode) {
   } catch (e) {
     console.error(e);
   }
+}
+
+function success(res, data) {
+  return res.json(Object.assign({ success: true }, data));
+}
+
+function error(res, message) {
+  return res.json({ success: false, message });
+}
+
+function validateNewUser(email, emailAgain, password, passwordAgain) {
+  if (!compareStrings(email, emailAgain)) throw Error(`Email fields do not match`);
+  if (!compareStrings(password, passwordAgain)) throw Error(`Password fields do not match`);
+}
+
+function compareStrings(stringA, stringB) {
+  return stringA === stringB;
 }
 
 function capitalize(string) {

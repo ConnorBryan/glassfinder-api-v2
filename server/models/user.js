@@ -24,5 +24,22 @@ module.exports = (sequelize, DataTypes) => {
     type: DataTypes.STRING,
   });
 
+  User.prototype.getSafeFields = function () {
+    return {
+      email: {
+        value: this.email,
+        editable: false,
+      },
+      linked: {
+        value: this.linked,
+        editable: false,
+      },
+      type: {
+        value: this.type,
+        editable: false,
+      },
+    };
+  };
+
   return User;
 };
