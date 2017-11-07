@@ -40,7 +40,6 @@ app.use(async (req, res, next) => {
       req.decoded = resolved;
       next();
     } catch (e) {
-      console.error(e)
       res.json({
         success: false,
         message: `Unable to verify token`,

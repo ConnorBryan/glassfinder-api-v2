@@ -64,14 +64,14 @@ module.exports = {
 
         if (type === 'artist') {
           linkedAccount = await Artist.findOne({ where: { userId } });
-
+          
           if (!linkedAccount) {
             return error(res, `User #${id} is a linked account, but no linked account was found`);
           }
         }
       }
 
-      return success(res, { user, linkedAccount });
+      return success(res, { user, linkedAccount: linkedAccount.getEditable() });
     });
   },
   link: (req, res) => {
@@ -182,8 +182,8 @@ module.exports = {
     processify(req, res, async () => {
       const {
         user: stringUser,
-        field,
-        newValue,
+        fieldKey,
+        newFieldValue,
         linked,
       } = req.body;
 
@@ -193,11 +193,11 @@ module.exports = {
         return error(res, `No user provided to update field`);
       }
 
-      if (!field) {
+      if (!fieldKey) {
         return error(res, `You can't update a field if you don't tell me what it is`);
       }
 
-      if (!newValue) {
+      if (!newFieldValue) {
         return error(res, `You must submit a new value to override the previous value`);
       }
 
@@ -230,7 +230,7 @@ module.exports = {
               return error(res, `No linked artist was found for user #${userId}`);
             }
 
-            artist[field] = newValue;
+            artist[fieldKey] = newFieldValue;
 
             await artist.save();
 
@@ -238,7 +238,7 @@ module.exports = {
           default: throw Error(`Unstable type provided in updateField`);
         }
       } else {
-        dbUser[field] = newValue;
+        dbUser[fieldKey] = newFieldValue;
 
         await dbUser.save();
 

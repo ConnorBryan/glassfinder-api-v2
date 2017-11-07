@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
     tagline: DataTypes.STRING,
     image: DataTypes.STRING,
     from: DataTypes.STRING,
-    description: DataTypes.TEXT,    
+    description: DataTypes.TEXT,
   });
 
   Artist.associate = models => {
@@ -16,6 +16,16 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'pieceId',
       as: 'pieces',
     });
+  };
+
+  Artist.prototype.getEditable = function () {
+    return {
+      name: this.name,
+      tagline: this.tagline,
+      image: this.image,
+      from: this.from,
+      description: this.description,
+    };
   };
 
   return Artist;
