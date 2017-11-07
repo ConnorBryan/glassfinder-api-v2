@@ -11,5 +11,6 @@ module.exports = app => {
   app.post('/api/users/link', usersController.link);
   app.post('/api/users/sync', usersController.sync);
   app.post('/api/users/verify', usersController.verify);
+  app.post('/api/users/update-field', usersController.updateField);
   app.post('/api/change-password', usersController.changePassword);
 };

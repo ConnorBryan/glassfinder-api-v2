@@ -27,7 +27,7 @@ module.exports = {
       success(res);
     });
   },
-  get: async (req, res) => {
+  get: (req, res) => {
     processify(req, res, async () => {
       const { email, password } = req.body;
 
@@ -41,7 +41,7 @@ module.exports = {
       return success(res, { user, token });
     });
   },
-  sync: async (req, res) => {
+  sync: (req, res) => {
     processify(req, res, async () => {
       const { email } = req.body;
 
@@ -74,7 +74,7 @@ module.exports = {
       return success(res, { user, linkedAccount });
     });
   },
-  link: async (req, res) => {
+  link: (req, res) => {
     processify(req, res, async () => {
       const { user, type } = req.body;
 
@@ -147,14 +147,14 @@ module.exports = {
       return success(res, { user, token });
     });
   },
-  list: async (req, res) => {
+  list: (req, res) => {
     processify(req, res, async () => {
       const users = await User.all();
       
       return res.status(200).send(users);
     });
   },
-  changePassword: async (req, res) => {
+  changePassword: (req, res) => {
     processify(req, res, async () => {
       const { user, password } = req.body;
 
@@ -176,6 +176,74 @@ module.exports = {
       await dbUser.save();
 
       return success(res);
+    });
+  },
+  updateField: (req, res) => {
+    processify(req, res, async () => {
+      const {
+        user: stringUser,
+        field,
+        newValue,
+        linked,
+      } = req.body;
+
+      const user = JSON.parse(stringUser);
+
+      if (!user) {
+        return error(res, `No user provided to update field`);
+      }
+
+      if (!field) {
+        return error(res, `You can't update a field if you don't tell me what it is`);
+      }
+
+      if (!newValue) {
+        return error(res, `You must submit a new value to override the previous value`);
+      }
+
+      if (linked && !user.linked) {
+        return error(res, `A linked request was made on a user that has not been linked`);
+      }
+
+      const { id } = user;
+
+      if (!id) {
+        return error(res, `Whatever that user was, it didn't have a valid id`);
+      }
+      
+      await User.sync();
+
+      const dbUser = await User.findById(id);
+
+      if (!dbUser) {
+        return error(res, `No matching user was found in the database`);        
+      }
+
+      if (linked) {
+        const { id: userId, type } = dbUser;
+
+        switch (true) {
+          case type === 'artist':
+            const artist = await Artist.findOne({ where: { userId } });
+
+            if (!artist) {
+              return error(res, `No linked artist was found for user #${userId}`);
+            }
+
+            artist[field] = newValue;
+
+            await artist.save();
+
+            return success(res, { artist });
+          default: throw Error(`Unstable type provided in updateField`);
+        }
+      } else {
+        dbUser[field] = newValue;
+
+        await dbUser.save();
+
+        return success(res, { user: dbUser });
+      }
     });
   },
 }
@@ -269,5 +337,8 @@ async function sendVerificationEmail(email, userId, verificationCode) {
 }
 
 function capitalize(string) {
-  return string.split('').map((l, i) => i === 0 ? l.toUpperCase() : l).join('');
+  return string
+    .split('')
+    .map((l, i) => i === 0 ? l.toUpperCase() : l)
+    .join('');
 }
