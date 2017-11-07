@@ -250,9 +250,9 @@ module.exports = {
 
 /* = = = */
 
-function processify(req, res, process) {
+async function processify(req, res, process) {
   try {
-    process();
+    await process();
   } catch (e) {
     return error(res, e.message);
   }
