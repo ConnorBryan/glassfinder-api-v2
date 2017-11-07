@@ -3,7 +3,7 @@ const uuid = require('uuid/v4');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 
-const { User, Artist } = require('../models');
+const { User, Artist, Piece } = require('../models');
 
 module.exports = {
   create: (req, res) => {
@@ -250,6 +250,61 @@ module.exports = {
 
         return success(res, { user: dbUser.getSafeFields() });
       }
+    });
+  },
+  uploadPiece: (req, res) => {
+    processify(req, res, async () => {
+      const {
+        user: stringUser,
+        image,
+        title,
+        price,
+        description,
+      } = req.body;
+
+      if (!stringUser) {
+        return error(res, `A user must be provided with which to associate the uploaded piece`);
+      }
+
+      if (!image) {
+        return error(res, `A new piece cannot be uploaded without an image`);
+      }
+
+      if (!title) {
+        return error(res, `A new piece cannot be uploaded without a title`);
+      }
+
+      if (!price) {
+        return error(res, `A new piece cannot be uploaded without a price`);
+      }
+
+      if (!description) {
+        return error(res, `A new piece cannot be uploaded without a description`);
+      }
+
+      const { email } = JSON.parse(stringUser);
+
+      if (!email) {
+        return error(res, `Malformed user sent to upload piece`);        
+      }
+
+      const dbUser = await User.findOne({ where: { email } });
+
+      if (!dbUser) {
+        return error(res, `No user was found with email ${email}`);
+      }
+
+      const { id: userId } = dbUser;
+
+      const piece = await Piece.create({
+        image,
+        title,
+        price,
+        description,
+        userId,
+      });
+
+      return success(res, { piece });
     });
   },
 }

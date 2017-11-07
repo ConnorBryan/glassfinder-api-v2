@@ -12,10 +12,6 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'userId',
       as: 'artist',
     });
-    Artist.hasMany(models.Piece, {
-      foreignKey: 'pieceId',
-      as: 'pieces',
-    });
   };
 
   Artist.prototype.getSafeFields = function () {
