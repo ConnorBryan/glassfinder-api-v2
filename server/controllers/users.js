@@ -256,7 +256,6 @@ module.exports = {
     processify(req, res, async () => {
       const {
         user: stringUser,
-        image,
         title,
         price,
         description,
@@ -264,10 +263,6 @@ module.exports = {
 
       if (!stringUser) {
         return error(res, `A user must be provided with which to associate the uploaded piece`);
-      }
-
-      if (!image) {
-        return error(res, `A new piece cannot be uploaded without an image`);
       }
 
       if (!title) {
@@ -297,7 +292,7 @@ module.exports = {
       const { id: userId } = dbUser;
 
       const piece = await Piece.create({
-        image,
+        image: req.file.location,
         title,
         price,
         description,
