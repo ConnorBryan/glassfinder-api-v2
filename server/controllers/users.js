@@ -59,9 +59,9 @@ module.exports = {
         return error(res, `Unable to sync with invalid email ${email}`);
       }
 
-      if (user.linked) {
-        const { id: userId, type } = user;
+      const { id: userId, type } = user;
 
+      if (user.linked) {
         if (type === 'artist') {
           linkedAccount = await Artist.findOne({ where: { userId } });
           
@@ -71,9 +71,12 @@ module.exports = {
         }
       }
 
+      const pieces = await Piece.findAll({ where: { userId } });
+
       return success(res, {
         user: user.getSafeFields(),
         linkedAccount: linkedAccount ? linkedAccount.getSafeFields() : null,
+        pieces,
       });
     });
   },
