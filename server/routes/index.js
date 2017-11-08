@@ -1,5 +1,8 @@
-const usersController = require('../controllers').users;
 const upload = require('../aws/upload');
+const {
+  users: usersController,
+  pieces: piecesController,
+} = require('../controllers');
 
 module.exports = app => {
   app.get('/api', (req, res) => res.status(200).send({
@@ -15,4 +18,6 @@ module.exports = app => {
   app.post('/api/users/verify', usersController.verify);
   app.post('/api/users/update-field', usersController.updateField);
   app.post('/api/users/upload-piece', upload.single('image'), usersController.uploadPiece);
+
+  app.get('/api/pieces', piecesController.list);
 };

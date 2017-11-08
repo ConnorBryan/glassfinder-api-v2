@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 
 const { User, Artist, Piece } = require('../models');
+const { processify, success, error } = require('./common');
 
 module.exports = {
   create: (req, res) => {
@@ -309,14 +310,6 @@ module.exports = {
 
 /* = = = */
 
-async function processify(req, res, process) {
-  try {
-    await process();
-  } catch (e) {
-    return error(res, e.message);
-  }
-}
-
 async function getExistingUser(email) {
   const user = await User.findOne({ where: { email } });
 
@@ -376,14 +369,6 @@ async function sendVerificationEmail(email, userId, verificationCode) {
   } catch (e) {
     console.error(e);
   }
-}
-
-function success(res, data) {
-  return res.json(Object.assign({ success: true }, data));
-}
-
-function error(res, message) {
-  return res.json({ success: false, message });
 }
 
 function validateNewUser(email, emailAgain, password, passwordAgain) {

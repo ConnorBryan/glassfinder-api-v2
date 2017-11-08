@@ -8,6 +8,7 @@ const app = express();
 const NON_AUTHENTICATED_ROUTES = {
   ['/api/user']: true,
   ['/api/users/verify']: true,
+  ['/api/piece']: true,
 };
 
 addPluralsToObjectKeys(NON_AUTHENTICATED_ROUTES);
