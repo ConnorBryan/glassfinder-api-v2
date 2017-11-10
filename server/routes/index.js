@@ -2,6 +2,7 @@ const upload = require('../aws/upload');
 const {
   users: usersController,
   pieces: piecesController,
+  artists: artistsController,
 } = require('../controllers');
 
 module.exports = app => {
@@ -20,4 +21,6 @@ module.exports = app => {
   app.post('/api/users/upload-piece', upload.single('image'), usersController.uploadPiece);
 
   app.get('/api/pieces', piecesController.list);
+
+  app.get('/api/artist/:id', artistsController.get);
 };

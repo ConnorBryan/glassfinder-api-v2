@@ -9,6 +9,7 @@ const NON_AUTHENTICATED_ROUTES = {
   ['/api/user']: true,
   ['/api/users/verify']: true,
   ['/api/piece']: true,
+  ['/api/artist']: true,
 };
 
 addPluralsToObjectKeys(NON_AUTHENTICATED_ROUTES);
@@ -28,8 +29,9 @@ app.use((req, res, next) => {
 app.use(async (req, res, next) => {
   const token = req.body.token || req.query.token || req.headers['x-access-token'];
   const baseUrl = req.url.split('?')[0];
+  const strippedUrl = baseUrl.split('/').slice(0, 3).join('/');
 
-  if (NON_AUTHENTICATED_ROUTES[baseUrl]) return next();
+  if (NON_AUTHENTICATED_ROUTES[strippedUrl]) return next();
 
   if (token) {
     try {
