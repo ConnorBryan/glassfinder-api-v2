@@ -11,6 +11,7 @@ module.exports = app => {
   }));
 
   app.get('/api/users', usersController.list);
+  app.get('/api/users/find-linked', usersController.findLinked);
   app.post('/api/user', usersController.get);
   app.post('/api/change-password', usersController.changePassword);  
   app.post('/api/users', usersController.create);

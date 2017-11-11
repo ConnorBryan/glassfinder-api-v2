@@ -8,6 +8,7 @@ const app = express();
 const NON_AUTHENTICATED_ROUTES = {
   ['/api/user']: true,
   ['/api/users/verify']: true,
+  ['/api/users/find-linked']: true,
   ['/api/piece']: true,
   ['/api/artist']: true,
 };
@@ -30,7 +31,7 @@ app.use(async (req, res, next) => {
   const token = req.body.token || req.query.token || req.headers['x-access-token'];
   const baseUrl = req.url.split('?')[0];
   const strippedUrl = baseUrl.split('/').slice(0, 3).join('/');
-
+  console.log(NON_AUTHENTICATED_ROUTES[strippedUrl])
   if (NON_AUTHENTICATED_ROUTES[strippedUrl]) return next();
 
   if (token) {

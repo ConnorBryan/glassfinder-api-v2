@@ -125,6 +125,41 @@ module.exports = {
       }
     });
   },
+  findLinked: (req, res) => {
+    processify(req, res, async () => {
+      const { query: { id } } = req;
+
+      if (!id) {
+        return error(res, `Cannot find a linked account without a specified ID`);
+      }
+
+      const user = await User.findById(id);
+
+      if (!user) {
+        return error(res, `No user exists with ID #${id}`);
+      }
+
+      if (!user.linked) {
+        return error(res, `User with ID #${id} is not linked`);
+      }
+
+      const { type } = user;
+
+      switch (type) {
+        case 'artist':
+          const artist = await Artist.findOne({ where: { userId: id } });
+
+          if (!artist) {
+            return error(res, `User #${id} is linked with type 'artist', but no equivalent artist exists`);
+          }
+
+          const { id: artistId } = artist;
+
+          return success(res, { type, id: artistId });
+        default: throw Error(`Invalid type exists on user #${id}`);
+      }
+    });
+  },
   verify: (req, res) => {
     processify(req, res, async () => {
       const { verificationCode, userId } = req.query;
