@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
   const Artist = sequelize.define('Artist', {
     name: DataTypes.STRING,
-    tagline: DataTypes.STRING,
+    tagline: DataTypes.TEXT,
     image: DataTypes.STRING,
     from: DataTypes.STRING,
     description: DataTypes.TEXT,

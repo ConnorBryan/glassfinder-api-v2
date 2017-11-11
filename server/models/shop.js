@@ -2,17 +2,13 @@ module.exports = (sequelize, DataTypes) => {
   const Shop = sequelize.define('Shop', {
     name: DataTypes.STRING,
     image: DataTypes.STRING,
-    
-    street: DataTypes.STRING,
+    street: DataTypes.TEXT,
     city: DataTypes.STRING,
     state: DataTypes.STRING,
     zip: DataTypes.STRING,
-
     email: DataTypes.STRING,
     phone: DataTypes.STRING,
-
     description: DataTypes.TEXT,
-
     lat: DataTypes.DOUBLE,
     lng: DataTypes.DOUBLE,
   });

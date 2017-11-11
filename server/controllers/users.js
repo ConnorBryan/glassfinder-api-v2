@@ -132,15 +132,12 @@ module.exports = {
           const shop = await Shop.create({
             name: 'Connor\'s Corner',
             image: 'https://placehold.it/400x400',
-            
             street: '4875 Gramercy Oaks Dr #458',
             city: 'Dallas',
             state: 'TX',
             zip: '75160',
-
             email: 'cchromium@gmail.com',
             phone: '214-677-6265',
-
             description: 'For all your glass needs.',
             userId: dbUser.id,
           });
