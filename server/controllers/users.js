@@ -3,7 +3,7 @@ const uuid = require('uuid/v4');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 
-const { User, Artist, Piece } = require('../models');
+const { User, Artist, Shop, Piece } = require('../models');
 const { processify, success, error } = require('./common');
 
 module.exports = {
@@ -46,7 +46,7 @@ module.exports = {
     processify(req, res, async () => {
       const { email } = req.body;
 
-      let linkedAccount;
+      let linkedAccount, pieces;
 
       if (!email) {
        return error(res, `An email is required to sync an account with the database`);
@@ -63,16 +63,21 @@ module.exports = {
       const { id: userId, type } = user;
 
       if (user.linked) {
-        if (type === 'artist') {
-          linkedAccount = await Artist.findOne({ where: { userId } });
-          
-          if (!linkedAccount) {
-            return error(res, `User #${id} is a linked account, but no linked account was found`);
-          }
+        switch (type) {
+          case 'artist':
+            linkedAccount = await Artist.findOne({ where: { userId } });
+            break;
+          case 'shop':
+            linkedAccount = await Shop.findOne({ where: { userId } });
+            break;            
         }
-      }
 
-      const pieces = await Piece.findAll({ where: { userId } });
+        if (!linkedAccount) {
+          return error(res, `User #${id} is a linked account, but no linked account was found`);
+        }
+
+        pieces = await Piece.findAll({ where: { userId } });
+      }
 
       return success(res, {
         user: user.getSafeFields(),
@@ -110,17 +115,37 @@ module.exports = {
       switch (type) {
         case 'artist':
           const artist = await Artist.create({
-            name: 'Bob Dole',
-            tagline: '',
-            image: '',
-            from: '',
-            description: '',
+            name: 'Connor Bryan',
+            tagline: 'An all-around mediocre guy.',
+            image: 'https://placehold.it/400x400',
+            from: 'Dallas, TX',
+            description: 'This is just an example account.',
             userId: dbUser.id,
           });
 
           await dbUser.save();
 
           return success(res, { artist: artist.getSafeFields() });
+        case 'shop':
+          const shop = await Shop.create({
+            name: 'Connor\'s Corner',
+            image: 'https://placehold.it/400x400',
+            
+            street: '4875 Gramercy Oaks Dr #458',
+            city: 'Dallas',
+            state: 'TX',
+            zip: '75160',
+
+            email: 'cchromium@gmail.com',
+            phone: '214-677-6265',
+
+            description: 'For all your glass needs.',
+            userId: dbUser.id,
+          });
+
+          await dbUser.save();
+
+          return success(res, { shop: shop.getSafeFields() });
         default: throw Error(`Unstable type ${type} cannot be linked`);
       }
     });
@@ -156,6 +181,16 @@ module.exports = {
           const { id: artistId } = artist;
 
           return success(res, { type, id: artistId });
+        case 'shop':
+          const shop = await Shop.findOne({ where: { userId: id } });
+
+          if (!shop) {
+            return error(res, `User #${id} is linked with type 'shop', but no equivalent shop exists`);
+          }
+
+          const { id: shopId } = shop;
+
+          return success(res, { type, id: shopId });
         default: throw Error(`Invalid type exists on user #${id}`);
       }
     });
@@ -267,8 +302,8 @@ module.exports = {
       if (linked) {
         const { id: userId, type } = dbUser;
 
-        switch (true) {
-          case type === 'artist':
+        switch (type) {
+          case 'artist':
             const artist = await Artist.findOne({ where: { userId } });
 
             if (!artist) {
@@ -280,6 +315,18 @@ module.exports = {
             await artist.save();
 
             return success(res, { artist: artist.getSafeFields() });
+          case 'shop':
+            const shop = await Shop.findOne({ where: { userId } });
+
+            if (!shop) {
+              return error(res, `No linked shop was found for user #${userId}`);
+            }
+
+            shop[fieldKey] = newFieldValue;
+
+            await shop.save();
+
+            return success(res, { shop: shop.getSafeFields() });
           default: throw Error(`Unstable type provided in updateField`);
         }
       } else {
