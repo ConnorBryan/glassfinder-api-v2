@@ -12,6 +12,9 @@ module.exports = (sequelize, DataTypes) => {
     phone: DataTypes.STRING,
 
     description: DataTypes.TEXT,
+
+    lat: DataTypes.DOUBLE,
+    lng: DataTypes.DOUBLE,
   });
 
   Shop.associate = models => {
@@ -58,6 +61,14 @@ module.exports = (sequelize, DataTypes) => {
       description: {
         value: this.description,
         editable: true,
+      },
+      lat: {
+        value: this.lat,
+        editable: false,
+      },
+      lng: {
+        value: this.lng,
+        editable: false,
       },
     };
   };

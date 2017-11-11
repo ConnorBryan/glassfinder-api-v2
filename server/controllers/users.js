@@ -2,7 +2,9 @@ const argon2 = require('argon2');
 const uuid = require('uuid/v4');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 
+const { GOOGLE_MAPS_API_KEY } = require('../config/google');
 const { User, Artist, Shop, Piece } = require('../models');
 const { processify, success, error } = require('./common');
 
@@ -323,6 +325,36 @@ module.exports = {
             }
 
             shop[fieldKey] = newFieldValue;
+
+            // Changing an address field updates the position for the Google Maps marker.
+            const addressChangers = {
+              street: true,
+              city: true,
+              state: true,
+              zip: true,
+            };
+
+            if (addressChangers[fieldKey]) {
+              const {
+                street,
+                city,
+                state,
+                zip,
+              } = shop;
+              const address = `${street}+${city}+${state}+${zip}`;
+              const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${GOOGLE_MAPS_API_KEY}`;
+              const { data: { status, results } } = await axios.get(url);
+
+              if (status !== 'OK') {
+                return error(res, `An address field was changed, but Google was unable to get coordinates from that address`);
+              }
+
+              const { geometry: { location: { lat, lng } } } = results[0];
+
+              shop.lat = lat;
+              shop.lng = lng;
+            }
+            //
 
             await shop.save();
 
