@@ -66,6 +66,8 @@ async function linkUsers(db) {
           email: chance.email(),
           phone: generatePhoneNumber(),
           description: chance.paragraph(),
+          lat: chance.latitude(),
+          lng: chance.longitude(),
           userId: id,
         });
       default: break;
