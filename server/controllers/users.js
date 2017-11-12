@@ -1,4 +1,4 @@
-const argon2 = require('argon2');
+const SHA256 = require('sha256');
 const uuid = require('uuid/v4');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
@@ -16,7 +16,7 @@ module.exports = {
       validateNewUser(email, emailAgain, password, passwordAgain);
       await checkUserDoesntAlreadyExist(email);
 
-      const safePassword = await argon2.hash(password);
+      const safePassword = await SHA256(password);
       const verificationCode = uuid();
 
       const { id } = await User.create({
@@ -38,6 +38,8 @@ module.exports = {
       const { password: safePassword } = user;
 
       await checkPasswordMatches(safePassword, password);
+
+      console.log('here');
 
       const token = jwt.sign({ user }, 'abc123');
 
@@ -249,7 +251,7 @@ module.exports = {
         return error(res, `Unable to change password for invalid user ID #${id}`);
       }
 
-      const safePassword = await argon2.hash(password);
+      const safePassword = await SHA256(password);
 
       dbUser.password = safePassword;
 
@@ -438,7 +440,7 @@ async function checkUserDoesntAlreadyExist(email) {
 }
 
 async function checkPasswordMatches(dbPassword, receivedPassword) {
-  const match = await argon2.verify(dbPassword, receivedPassword);
+  const match = await SHA256(receivedPassword) === dbPassword;
 
   if (!match) throw Error(`Password is incorrect`);
 
