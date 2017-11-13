@@ -19,6 +19,7 @@ module.exports = app => {
   app.post('/api/users/update-field', usersController.updateField);
   app.post('/api/users/upload-piece', upload.single('image'), usersController.uploadPiece);
   app.get('/api/pieces', piecesController.list);
+  app.delete('/api/piece/:id', piecesController.delete);
   app.get('/api/shop/:id', shopsController.get);
   app.get('/api/shops', shopsController.list);
   app.get('/api/artist/:id', artistsController.get);

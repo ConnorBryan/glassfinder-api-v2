@@ -26,4 +26,21 @@ module.exports = {
       }
     });
   },
+  delete: (req, res) => {
+    processify(req, res, async () => {
+      const { params: { id } } = req;
+
+      if (!id) {
+        error(res, `A piece ID is required for deletion`);
+      }
+
+      const piece = await Piece.destroy({ where: { id } });
+
+      if (!piece) {
+        error(res, `No piece was harmed during the making of this film`);
+      }
+
+      success(res, { piece });
+    });
+  },
 };
