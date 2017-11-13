@@ -1,6 +1,5 @@
-const { processify, success, error } = require('./common');
-
-const { Artist, Piece } = require('../models');
+const { Artist, Piece }               = require('../models');
+const { processify, success, error }  = require('./common');
 
 module.exports = {
   get: (req, res) => {

@@ -1,12 +1,12 @@
-const SHA256 = require('sha256');
-const uuid = require('uuid/v4');
-const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
-const axios = require('axios');
+const SHA256      = require('sha256');
+const uuid        = require('uuid/v4');
+const jwt         = require('jsonwebtoken');
+const nodemailer  = require('nodemailer');
+const axios       = require('axios');
 
-const { GOOGLE_MAPS_API_KEY } = require('../config/google');
-const { User, Artist, Shop, Piece } = require('../models');
-const { processify, success, error } = require('./common');
+const { GOOGLE_MAPS_API_KEY }         = require('../../constants.json');
+const { User, Artist, Shop, Piece }   = require('../models');
+const { processify, success, error }  = require('./common');
 
 module.exports = {
   create: (req, res) => {
@@ -38,8 +38,6 @@ module.exports = {
       const { password: safePassword } = user;
 
       await checkPasswordMatches(safePassword, password);
-
-      console.log('here');
 
       const token = jwt.sign({ user }, 'abc123');
 

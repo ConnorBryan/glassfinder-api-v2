@@ -1,13 +1,17 @@
-const fs = require('fs');
-const AWS = require('aws-sdk');
-const multer = require('multer');
-const multerS3 = require('multer-s3');
+/**
+ * @overview
+ * This file handles AWS S3 upload functionality.
+ */
+const fs                      = require('fs');
+const AWS                     = require('aws-sdk');
+const multer                  = require('multer');
+const multerS3                = require('multer-s3');
+const { BUCKET_NAME, REGION } = require('../../constants.json');
 
-AWS.config.loadFromPath('server/aws/config.json');
-
-const region = 'us-west-1';
-const bucket = 'glassfinder-pieces';
-const s3 = new AWS.S3({ region });
+const bucket = BUCKET_NAME;
+const region = REGION;
+const credentials = new AWS.SharedIniFileCredentials();
+const s3 = new AWS.S3({ region, credentials });
 
 module.exports = multer({
   storage: multerS3({

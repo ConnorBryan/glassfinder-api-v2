@@ -1,7 +1,7 @@
-const users = require('./users');
-const pieces = require('./pieces');
-const shops = require('./shops');
+const users   = require('./users');
 const artists = require('./artists');
+const shops   = require('./shops');
+const pieces  = require('./pieces');
 
 module.exports = {
   users,

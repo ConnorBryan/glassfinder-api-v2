@@ -1,8 +1,7 @@
 const { Op } = require('sequelize');
 
-const { processify, success, error } = require('./common');
-
-const { Piece } = require('../models');
+const { Piece }                       = require('../models');
+const { processify, success, error }  = require('./common');
 
 module.exports = {
   list: (req, res) => {
