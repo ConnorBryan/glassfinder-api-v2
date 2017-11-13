@@ -26,6 +26,36 @@ module.exports = {
       }
     });
   },
+  edit: (req, res) => {
+    processify(req, res, async () => {
+      const {
+        params: { id },
+        body: {
+          title,
+          price,
+          description,
+        },
+      } = req;
+
+      if (!id) {
+        error(res, `A piece ID is required to edit`);
+      }
+
+      const piece = await Piece.findById(id);
+
+      if (!piece) {
+        error(res, `No piece with ID #${id} exists in the database`);
+      }
+
+      if (title)        piece.title = title;
+      if (price)        piece.price = price;
+      if (description)  piece.description = description;
+
+      await piece.save();
+
+      success(res, { piece });
+    });
+  },
   delete: (req, res) => {
     processify(req, res, async () => {
       const { params: { id } } = req;
