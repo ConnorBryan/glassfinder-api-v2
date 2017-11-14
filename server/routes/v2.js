@@ -1,5 +1,10 @@
+const { Op } = require('sequelize');
+
 const { processify, success, error } = require('../controllers/common');
 const models = require('../models');
+
+const DEFAULT_PAGE      = 0;
+const DEFAULT_PER_PAGE  = 10;
 
 module.exports = app => {
   Object
@@ -103,8 +108,23 @@ function destroyControl(req, res, Model) {
 
 function listControl(req, res, Model) {
   processify(req, res, async () => {
-    const models = await Model.all();
+    const {
+      ids,
+      page = DEFAULT_PAGE,
+      perPage = DEFAULT_PER_PAGE,
+    } = req.query;
+    const paginationStart = page * perPage;
+    const paginationEnd = paginationStart + perPage;
 
-    return success(res, { models });
+    const models = await (
+      ids
+        ? Model.findAll({ where: { id: { [Op.or]: ids.split(',') } } })
+        : Model.all()
+    );
+
+    const paginatedModels = models.slice(paginationStart, paginationEnd);
+    const pageCount = Math.floor(models.length / perPage);
+
+    return success(res, { models: paginatedModels, pageCount });
   });
 }
