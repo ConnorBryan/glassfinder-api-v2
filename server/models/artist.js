@@ -1,11 +1,34 @@
 module.exports = (sequelize, DataTypes) => {
-  const Artist = sequelize.define('Artist', {
-    name: DataTypes.STRING,
-    tagline: DataTypes.TEXT,
-    image: DataTypes.STRING,
-    from: DataTypes.STRING,
-    description: DataTypes.TEXT,
-  });
+  const Artist = sequelize.define('Artist',
+    {
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      tagline: {
+        type: DataTypes.TEXT,
+        defaultValue: '',
+      },
+      image: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+      },
+      from: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+      },
+      description: {
+        type: DataTypes.TEXT,
+        defaultValue: '',
+      },
+    },
+    {
+      name: {
+        singular: 'artist',
+        plural: 'artists',
+      },
+    }
+  );
 
   Artist.associate = models => {
     Artist.belongsTo(models.User, {

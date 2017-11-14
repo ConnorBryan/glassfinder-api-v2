@@ -1,17 +1,58 @@
 module.exports = (sequelize, DataTypes) => {
-  const Shop = sequelize.define('Shop', {
-    name: DataTypes.STRING,
-    image: DataTypes.STRING,
-    street: DataTypes.TEXT,
-    city: DataTypes.STRING,
-    state: DataTypes.STRING,
-    zip: DataTypes.STRING,
-    email: DataTypes.STRING,
-    phone: DataTypes.STRING,
-    description: DataTypes.TEXT,
-    lat: DataTypes.DOUBLE,
-    lng: DataTypes.DOUBLE,
-  });
+  const Shop = sequelize.define('Shop',
+    {
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      image: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+      },
+      street: {
+        type: DataTypes.TEXT,
+        defaultValue: '',
+      },
+      city: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+      },
+      state: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+      },
+      zip: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+      },
+      email: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+      },
+      phone: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+      },
+      description: {
+        type: DataTypes.TEXT,
+        defaultValue: '',
+      },
+      lat: {
+        type: DataTypes.DOUBLE,
+        defaultValue: null,
+      },
+      lng: {
+        type: DataTypes.DOUBLE,
+        defaultValue: null,
+      },
+    },
+    {
+      name: {
+        singular: 'shop',
+        plural: 'shops',
+      },
+    }
+  );
 
   Shop.associate = models => {
     Shop.belongsTo(models.User, {
