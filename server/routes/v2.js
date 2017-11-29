@@ -33,6 +33,8 @@ module.exports = app => {
         }
     });
 
+  app.post(`/api/v2/link-account`, (req, res) => linkControl(req, res));
+
   return app;
 };
 
@@ -126,5 +128,50 @@ function listControl(req, res, Model) {
     const pageCount = Math.floor(models.length / perPage);
 
     return success(res, { models: paginatedModels, pageCount });
+  });
+}
+
+function linkControl(req, res) {
+  processify(req, res, async () => {
+    const { body: { email, type, data } } = req;
+    const requiredFields = {
+      'shop': [
+        'name',
+        'description',
+        'street',
+        'city',
+        'stateCode',
+        'zip',
+        'image',
+        'email',
+        'phone',
+      ],
+    };
+
+    // All body parameters must be provided.
+    if (!email) return error(res, `An email is required to link an account.`);
+    if (!type) return error(res, `A type must be provided to link an account.`);
+    if (!data) return error(res, `Data must be provided with which to link an account.`);
+    
+    // Should contain all required fields.
+    const required = requiredFields[type];
+    
+    if (!required) return error(res, `An invalid type was specified.`);
+
+    // Account shouldn't already be linked.
+    const dbUser = await models.User.findOne({ where: { email } });
+
+    if (dbUser.linked) return error(res, `Specified account was already linked.`);
+
+    const attributes = required.reduce((acc, cur) => Object.assign(acc, { [cur]: data[cur] }), {});
+    attributes.state = data.stateCode;
+    attributes.type = type;
+    attributes.linked = true;
+
+    Object.keys(attributes).forEach(attribute => (dbUser[attribute] = attributes[attribute]));
+
+    await dbUser.save();
+
+    return success(res, { user: dbUser });
   });
 }
